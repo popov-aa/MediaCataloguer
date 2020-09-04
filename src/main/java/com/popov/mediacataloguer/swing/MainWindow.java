@@ -65,7 +65,7 @@ public class MainWindow extends JDialog {
         buttonMediaProfileRemove.addActionListener(this::buttonMediaProfileRemoveOnClicked);
 
         pack();
-
+        Utils.replaceWindow(this);
     }
 
     private void onOK() {

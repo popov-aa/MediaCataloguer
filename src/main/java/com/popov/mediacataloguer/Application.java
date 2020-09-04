@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 public class Application {
     public final static void main(String[] args) {
+        com.formdev.flatlaf.FlatLightLaf.install();
         Injector injector = Guice.createInjector(new MediaCataloguerModule());
         injector.getInstance(MainWindow.class).setVisible(true);
     }

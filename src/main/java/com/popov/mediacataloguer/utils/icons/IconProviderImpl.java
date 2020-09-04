@@ -3,6 +3,7 @@ package com.popov.mediacataloguer.utils.icons;
 import com.github.fcannizzaro.material.icons.IconMaterial;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,8 +36,15 @@ public class IconProviderImpl implements IconProvider {
     }
 
     private int getIconSize(IconTarget iconTarget) {
-        return switch (iconTarget) {
+        int value = switch (iconTarget) {
             case Button -> 16;
+            case WindowIcon -> 64;
         };
+
+        Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+        if (Math.max(dimension.getHeight(), dimension.getWidth()) > 1920) {
+            value *= 1.5;
+        }
+        return value;
     }
 }
