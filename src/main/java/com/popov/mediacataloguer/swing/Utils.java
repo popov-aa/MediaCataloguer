@@ -4,11 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Utils {
-    static void replaceWindow(JDialog dialog) {
+    static void replaceWindow(Window window) {
         Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-        dialog.setLocation(
-                (int) ((dimension.getWidth() - dialog.getWidth()) / 2),
-                (int) ((dimension.getHeight() - dialog.getHeight()) / 2)
+        window.setLocation(
+                (int) ((dimension.getWidth() - window.getWidth()) / 2),
+                (int) ((dimension.getHeight() - window.getHeight()) / 2)
         );
     }
 }

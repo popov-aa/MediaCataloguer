@@ -1,60 +1,46 @@
 package com.popov.mediacataloguer.swing;
 
 import com.google.inject.Injector;
+import com.popov.mediacataloguer.service.Settings;
+import com.popov.mediacataloguer.swing.dialogs.ExecDialog;
 import com.popov.mediacataloguer.utils.icons.IconKind;
 import com.popov.mediacataloguer.utils.icons.IconProvider;
 import com.popov.mediacataloguer.utils.icons.IconTarget;
+import org.w3c.dom.events.Event;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.swing.*;
 import java.awt.event.*;
 
-public class MainWindow extends JDialog {
+public class MainWindow extends JFrame {
     private JPanel contentPane;
-    private JButton buttonOK;
-    private JButton buttonCancel;
+    private JButton buttonClose;
     private JComboBox comboBox1;
     private JButton buttonMediaProfileCreate;
     private JButton buttonMediaProfileEdit;
     private JButton buttonMediaProfileRemove;
 
-    protected IconProvider iconProvider;
-    protected Injector injector;
+    final Settings settings;
+    final private IconProvider iconProvider;
+    final private Provider<MediaProfileEditDialog> mediaProfileEditDialogProvider;
 
     @Inject
-    public MainWindow(IconProvider iconProvider, Injector injector) {
+    public MainWindow(
+            Settings settings,
+            IconProvider iconProvider,
+            Provider<MediaProfileEditDialog> mediaProfileEditDialogProvider
+    ) {
+        this.settings = settings;
         this.iconProvider = iconProvider;
+        this.mediaProfileEditDialogProvider = mediaProfileEditDialogProvider;
 
         setContentPane(contentPane);
-        setModal(true);
-        getRootPane().setDefaultButton(buttonOK);
+        getRootPane().setDefaultButton(buttonClose);
 
-        buttonOK.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onOK();
-            }
-        });
-
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        });
-
-        // call onCancel() when cross is clicked
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                onCancel();
-            }
-        });
-
-        // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        buttonClose.addActionListener(event -> dispose());
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        contentPane.registerKeyboardAction(event -> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         buttonMediaProfileCreate.setIcon(iconProvider.getIcon(IconKind.Create, IconTarget.Button));
         buttonMediaProfileEdit.setIcon(iconProvider.getIcon(IconKind.Edit, IconTarget.Button));
@@ -65,27 +51,24 @@ public class MainWindow extends JDialog {
         buttonMediaProfileRemove.addActionListener(this::buttonMediaProfileRemoveOnClicked);
 
         pack();
+        setIconImage(iconProvider.getIcon(IconKind.FolderOpen, IconTarget.WindowIcon).getImage());
+        setTitle("Media cataloguer");
         Utils.replaceWindow(this);
     }
 
-    private void onOK() {
-        // add your code here
-        dispose();
-    }
-
-    private void onCancel() {
-        // add your code here if necessary
-        dispose();
-    }
-
     private void buttonMediaProfileCreateOnClicked(ActionEvent actionEvent) {
-        MediaProfileEditDialog mediaProfileEditDialog = new MediaProfileEditDialog(iconProvider);
-        mediaProfileEditDialog.setVisible(true);
+        MediaProfileEditDialog mediaProfileEditDialog = mediaProfileEditDialogProvider.get();
+        if (mediaProfileEditDialog.exec() == ExecDialog.Result.Accepted) {
+            settings.getImportProfiles().add(mediaProfileEditDialog.getImportProfile());
+        }
     }
 
     private void buttonMediaProfileEditOnClicked(ActionEvent actionEvent) {
-        MediaProfileEditDialog mediaProfileEditDialog = new MediaProfileEditDialog(iconProvider);
-        mediaProfileEditDialog.setVisible(true);
+        MediaProfileEditDialog mediaProfileEditDialog = mediaProfileEditDialogProvider.get();
+        mediaProfileEditDialog.setAction(MediaProfileEditDialog.Action.Edit);
+        if (mediaProfileEditDialog.exec() == ExecDialog.Result.Accepted) {
+
+        }
     }
 
     private void buttonMediaProfileRemoveOnClicked(ActionEvent actionEvent) {

@@ -1,16 +1,20 @@
 package com.popov.mediacataloguer.swing;
 
 import com.popov.mediacataloguer.ImportProfile;
-import com.popov.mediacataloguer.service.Settings;
+import com.popov.mediacataloguer.MediaType;
+import com.popov.mediacataloguer.swing.dialogs.AbstractExecDialog;
 import com.popov.mediacataloguer.utils.icons.IconKind;
 import com.popov.mediacataloguer.utils.icons.IconProvider;
 import com.popov.mediacataloguer.utils.icons.IconTarget;
+import lombok.Getter;
 
 import javax.inject.Inject;
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
 import java.awt.event.*;
+import java.util.Optional;
 
-public class MediaProfileEditDialog extends JDialog {
+public class MediaProfileEditDialog extends AbstractExecDialog {
 
     enum Action {
         Create,
@@ -26,31 +30,29 @@ public class MediaProfileEditDialog extends JDialog {
     private JCheckBox checkBoxRequestInputDirectory;
     private JTable tableOutputDirectories;
     private JButton buttonInputDirectoryClear;
+    private JButton clearOutputDirectoryButton;
+    private JButton openOutputDirectoryButton;
 
-    private Action action;
-    private ImportProfile importProfile;
+    @Getter
+    private ImportProfile importProfile = new ImportProfile();
+    @Getter
+    private Action action = Action.Create;
 
-    private IconProvider iconProvider;
+    final private OutputDirPathsByMediaTypesTableModel outputDirPathsByMediaTypesTableModel = new OutputDirPathsByMediaTypesTableModel();
+
+    final private IconProvider iconProvider;
 
     @Inject
-    public MediaProfileEditDialog(IconProvider iconProvider, ImportProfile importProfile) {
+    public MediaProfileEditDialog(IconProvider iconProvider) {
         this.iconProvider = iconProvider;
-        this.action = importProfile == null ? Action.Create : Action.Edit;
-        if (importProfile == null) {
-            importProfile = new ImportProfile();
-        }
 
+        setImportProfile(importProfile);
+        setAction(action);
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
-        setTitle(this.action == Action.Create ? "Creating media profile" : "Editing import profile");
 
-        buttonOK.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onOK();
-            }
-        });
-
+        buttonOK.addActionListener(event -> onOK());
         buttonCancel.addActionListener(event -> dispose());
 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -67,7 +69,15 @@ public class MediaProfileEditDialog extends JDialog {
 
         checkBoxRequestInputDirectory.addActionListener(actionEvent -> validateData());
 
-        tableOutputDirectories.setModel(new OutputDirPathsByMediaTypesTableModel(importProfile.getOutputDirPaths()));
+        tableOutputDirectories.setModel(outputDirPathsByMediaTypesTableModel);
+        tableOutputDirectories.getSelectionModel().addListSelectionListener(this::tableOutputDirectoriesSelectionChanged);
+        tableOutputDirectories.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        openOutputDirectoryButton.setIcon(iconProvider.getIcon(IconKind.FolderOpen, IconTarget.Button));
+        openOutputDirectoryButton.addActionListener(this::openOutputDirectoryButtonOnClick);
+
+        clearOutputDirectoryButton.setIcon(iconProvider.getIcon(IconKind.Remove, IconTarget.Button));
+        clearOutputDirectoryButton.addActionListener(this::clearOutputDirectoryButtonOnClick);
 
         pack();
         Utils.replaceWindow(this);
@@ -75,13 +85,18 @@ public class MediaProfileEditDialog extends JDialog {
         validateData();
     }
 
-    @Inject
-    public MediaProfileEditDialog(IconProvider iconProvider) {
-        this(iconProvider, null);
+    public void setImportProfile(ImportProfile importProfile) {
+        this.importProfile = importProfile;
+        outputDirPathsByMediaTypesTableModel.setOutputDirPaths(this.importProfile.getOutputDirPaths());
+    }
+
+    public void setAction(Action action) {
+        this.action = action;
+        setTitle(this.action == Action.Create ? "Creating media profile" : "Editing import profile");
     }
 
     private void onOK() {
-        dispose();
+        accept();
     }
 
     private void buttonInputDirectoryOpenOnClick(ActionEvent actionEvent) {
@@ -97,10 +112,39 @@ public class MediaProfileEditDialog extends JDialog {
     }
 
     public boolean isDataValid() {
-        System.out.println(textFieldTitle.getText().trim());
-        return textFieldTitle.getText().trim().length() > 0 && (checkBoxRequestInputDirectory.isSelected() || textFieldInputDirectory.getText().length() > 0);
+        return textFieldTitle.getText().trim().length() > 0 &&
+                (checkBoxRequestInputDirectory.isSelected() || textFieldInputDirectory.getText().length() > 0) &&
+                !importProfile.getOutputDirPaths().isEmpty();
     }
+
     private void validateData() {
         buttonOK.setEnabled(isDataValid());
+    }
+
+    private void tableOutputDirectoriesSelectionChanged(ListSelectionEvent e) {
+        Optional<MediaType> mediaType = tableOutputDirectories.getSelectedRow() == -1 ?
+                Optional.empty() : Optional.of(MediaType.values()[tableOutputDirectories.getSelectedRow()]);
+        openOutputDirectoryButton.setEnabled(mediaType.isPresent() ?
+                !importProfile.getOutputDirPaths().containsKey(mediaType.get()) : false);
+        clearOutputDirectoryButton.setEnabled(mediaType.isPresent() ?
+                !openOutputDirectoryButton.isEnabled() : false);
+    }
+
+    private void openOutputDirectoryButtonOnClick(ActionEvent event) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            MediaType mediaType = MediaType.values()[tableOutputDirectories.getSelectedRow()];
+            importProfile.getOutputDirPaths().put(mediaType, fileChooser.getSelectedFile().getPath());
+            outputDirPathsByMediaTypesTableModel.fireTableDataChanged();
+            validateData();
+        }
+    }
+
+    private void clearOutputDirectoryButtonOnClick(ActionEvent event) {
+        MediaType mediaType = MediaType.values()[tableOutputDirectories.getSelectedRow()];
+        importProfile.getOutputDirPaths().remove(mediaType);
+        outputDirPathsByMediaTypesTableModel.fireTableDataChanged();
+        validateData();
     }
 }

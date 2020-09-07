@@ -1,24 +1,26 @@
 package com.popov.mediacataloguer.swing;
 
 import com.popov.mediacataloguer.MediaType;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.util.Map;
 
+@NoArgsConstructor
+@AllArgsConstructor
 public class OutputDirPathsByMediaTypesTableModel extends AbstractTableModel {
 
+    @Getter @Setter
     private Map<MediaType,String> outputDirPaths;
 
     enum Column {
         Title,
         DirPath,
-        OpenButton
     };
-
-    OutputDirPathsByMediaTypesTableModel(Map<MediaType,String> outputDirPaths) {
-        this.outputDirPaths = outputDirPaths;
-    }
 
     @Override
     public int getRowCount() {
@@ -34,10 +36,10 @@ public class OutputDirPathsByMediaTypesTableModel extends AbstractTableModel {
     public Object getValueAt(int r, int c) {
         Column column = Column.values()[c];
         MediaType mediaType = MediaType.values()[r];
+        String outputDirPath = outputDirPaths == null ? null : outputDirPaths.get(mediaType);
         return switch (column) {
             case Title -> mediaType.toString();
-            case DirPath -> outputDirPaths.get(mediaType);
-            case OpenButton -> new JButton("Open");
+            case DirPath -> outputDirPath == null ? "disabled" : outputDirPath;
         };
     }
 
@@ -46,7 +48,6 @@ public class OutputDirPathsByMediaTypesTableModel extends AbstractTableModel {
         return switch (Column.values()[c]) {
             case Title -> String.class;
             case DirPath -> String.class;
-            case OpenButton -> JButton.class;
         };
     }
 
