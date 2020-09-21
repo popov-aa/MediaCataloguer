@@ -56,7 +56,6 @@ public class MediaProfileEditDialog extends AbstractExecDialog {
         buttonCancel.addActionListener(event -> dispose());
 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        contentPane.registerKeyboardAction(event -> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         textFieldTitle.getDocument().addDocumentListener(new DocumentListenerAdapter(documentEvent -> validateData()));
         textFieldInputDirectory.getDocument().addDocumentListener(new DocumentListenerAdapter(documentEvent -> validateData()));
@@ -146,5 +145,12 @@ public class MediaProfileEditDialog extends AbstractExecDialog {
         importProfile.getOutputDirPaths().remove(mediaType);
         outputDirPathsByMediaTypesTableModel.fireTableDataChanged();
         validateData();
+    }
+
+    public void save() {
+        importProfile.setTitle(textFieldTitle.getText().trim());
+        importProfile.setInputDirPath(checkBoxRequestInputDirectory.isSelected() ? Optional.of(textFieldInputDirectory.getText()) : Optional.empty());
+        importProfile.setRequestInputDirPath(checkBoxRequestInputDirectory.isSelected());
+        importProfile.setOutputDirPaths(outputDirPathsByMediaTypesTableModel.getOutputDirPaths());
     }
 }

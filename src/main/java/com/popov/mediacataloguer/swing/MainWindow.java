@@ -2,6 +2,7 @@ package com.popov.mediacataloguer.swing;
 
 import com.google.inject.Injector;
 import com.popov.mediacataloguer.service.Settings;
+import com.popov.mediacataloguer.service.SettingsProvider;
 import com.popov.mediacataloguer.swing.dialogs.ExecDialog;
 import com.popov.mediacataloguer.utils.icons.IconKind;
 import com.popov.mediacataloguer.utils.icons.IconProvider;
@@ -21,17 +22,20 @@ public class MainWindow extends JFrame {
     private JButton buttonMediaProfileEdit;
     private JButton buttonMediaProfileRemove;
 
-    final Settings settings;
+    final private Settings settings;
+    final private SettingsProvider settingsProvider;
     final private IconProvider iconProvider;
     final private Provider<MediaProfileEditDialog> mediaProfileEditDialogProvider;
 
     @Inject
     public MainWindow(
             Settings settings,
+            SettingsProvider settingsProvider,
             IconProvider iconProvider,
             Provider<MediaProfileEditDialog> mediaProfileEditDialogProvider
     ) {
         this.settings = settings;
+        this.settingsProvider = settingsProvider;
         this.iconProvider = iconProvider;
         this.mediaProfileEditDialogProvider = mediaProfileEditDialogProvider;
 
@@ -60,6 +64,7 @@ public class MainWindow extends JFrame {
         MediaProfileEditDialog mediaProfileEditDialog = mediaProfileEditDialogProvider.get();
         if (mediaProfileEditDialog.exec() == ExecDialog.Result.Accepted) {
             settings.getImportProfiles().add(mediaProfileEditDialog.getImportProfile());
+            settingsProvider.fireSettingsChanged();
         }
     }
 
@@ -67,7 +72,7 @@ public class MainWindow extends JFrame {
         MediaProfileEditDialog mediaProfileEditDialog = mediaProfileEditDialogProvider.get();
         mediaProfileEditDialog.setAction(MediaProfileEditDialog.Action.Edit);
         if (mediaProfileEditDialog.exec() == ExecDialog.Result.Accepted) {
-
+            settingsProvider.fireSettingsChanged();
         }
     }
 

@@ -6,8 +6,11 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
-@Getter @Setter
 public class Settings {
+
+    @Getter @Setter
     private List<ImportProfile> importProfiles = new ArrayList<>();
+
 }
