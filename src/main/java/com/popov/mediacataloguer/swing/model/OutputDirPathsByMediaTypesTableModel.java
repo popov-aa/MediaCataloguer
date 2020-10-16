@@ -1,4 +1,4 @@
-package com.popov.mediacataloguer.swing;
+package com.popov.mediacataloguer.swing.model;
 
 import com.popov.mediacataloguer.MediaType;
 import lombok.AllArgsConstructor;

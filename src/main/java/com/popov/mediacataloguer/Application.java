@@ -2,9 +2,7 @@ package com.popov.mediacataloguer;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.popov.mediacataloguer.swing.MainWindow;
-
-import javax.inject.Inject;
+import com.popov.mediacataloguer.swing.dialogs.MainWindow;
 
 public class Application {
     public final static void main(String[] args) {
